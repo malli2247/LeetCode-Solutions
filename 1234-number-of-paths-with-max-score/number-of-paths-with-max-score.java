@@ -1,67 +1,52 @@
 class Solution {
     public int[] pathsWithMaxScore(List<String> board) {
-        final int MOD = 1_000_000_007;
+        int MOD = 1_000_000_007;
         int n = board.size();
+        int[] score = new int[n + 1];
+        int[] ways = new int[n + 1];
+        Arrays.fill(score, -1);
+        for (int r = n - 1; r >= 0; r--) {
+            int[] newScore = new int[n + 1];
+            int[] newWays = new int[n + 1];
+            Arrays.fill(newScore, -1);
+            for (int c = n - 1; c >= 0; c--) {
+                char ch = board.get(r).charAt(c);
 
-        int[] nextScore = new int[n + 1];
-        int[] nextWays = new int[n + 1];
+                if (ch == 'X') 
+                    continue;
 
-        Arrays.fill(nextScore, -1);
-
-        for (int i = n - 1; i >= 0; i--) {
-            int[] currScore = new int[n + 1];
-            int[] currWays = new int[n + 1];
-
-            Arrays.fill(currScore, -1);
-
-            for (int j = n - 1; j >= 0; j--) {
-                char cell = board.get(i).charAt(j);
-
-                if (cell == 'X') {
+                if (ch == 'S') {
+                    newScore[c] = 0;
+                    newWays[c] = 1;
                     continue;
                 }
 
-                if (cell == 'S') {
-                    currScore[j] = 0;
-                    currWays[j] = 1;
+                int best = Math.max(score[c], Math.max(newScore[c + 1], score[c + 1]));
+
+                if (best == -1) 
                     continue;
-                }
 
-                int best = Math.max(
-                    nextScore[j],
-                    Math.max(currScore[j + 1], nextScore[j + 1])
-                );
+                long cnt = 0;
 
-                if (best == -1) {
-                    continue;
-                }
+                if (score[c] == best) 
+                    cnt += ways[c];
 
-                long ways = 0;
+                if (newScore[c + 1] == best) 
+                    cnt += newWays[c + 1];
 
-                if (nextScore[j] == best) {
-                    ways += nextWays[j];
-                }
-                if (currScore[j + 1] == best) {
-                    ways += currWays[j + 1];
-                }
-                if (nextScore[j + 1] == best) {
-                    ways += nextWays[j + 1];
-                }
+                if (score[c + 1] == best) 
+                    cnt += ways[c + 1];
 
-                int value = (cell == 'E') ? 0 : cell - '0';
-
-                currScore[j] = best + value;
-                currWays[j] = (int) (ways % MOD);
+                int val = ch == 'E' ? 0 : ch - '0';
+                newScore[c] = best + val;
+                newWays[c] = (int)(cnt % MOD);
             }
-
-            nextScore = currScore;
-            nextWays = currWays;
+            score = newScore;
+            ways = newWays;
         }
 
-        if (nextScore[0] == -1) {
+        if (score[0] == -1) 
             return new int[]{0, 0};
-        }
-
-        return new int[]{nextScore[0], nextWays[0]};
+        return new int[]{score[0], ways[0]};
     }
 }
