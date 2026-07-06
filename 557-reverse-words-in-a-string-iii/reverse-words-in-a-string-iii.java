@@ -1,15 +1,35 @@
 class Solution {
+
+    // Approach:
+    // Using two pointers, 'start' and 'end', each time 'end' reaches a space, we reverse the words before.
+    // To reverse, we convert the String 's' to a char array, then write a method to reverse the char in the array.
+
     public String reverseWords(String s) {
-        // Split the input string into words and reverse each word
-        String[] words = s.split(" ");
-        StringBuilder result = new StringBuilder();
-        for (String word : words) {
-            StringBuilder reversedWord = new StringBuilder(word).reverse();
-            result.append(reversedWord).append(" ");
+        // Convert s into char array.
+        char[] chars = s.toCharArray();
+
+        int start = 0;
+        int end;
+        for (end = 0; end <= chars.length; end++) {
+            // When 'end' reaches a space character ' ', reverse the words from 'start' to 'end' - 1 index in 'chars'.
+            if (end == chars.length || chars[end] == ' ') {
+                reverse(chars, start, end - 1);
+                // reset the start for the next word.
+                start = end + 1;
+            }
         }
-        result.deleteCharAt(result.length() - 1);  // Remove the extra space at the end
-        
-        // Convert StringBuilder to String
-        return result.toString();        
+
+        return new String(chars);
+    }
+
+    // A private method to reverse the char in the array using the 'start' and 'end' pointer.
+    private void reverse(char[] c, int start, int end) {
+        while (start < end) {
+            char tmp = c[end];
+            c[end] = c[start];
+            c[start] = tmp;
+            start++;
+            end--;
+        }
     }
 }
