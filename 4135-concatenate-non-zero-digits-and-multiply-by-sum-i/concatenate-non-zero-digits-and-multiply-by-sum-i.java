@@ -1,24 +1,16 @@
 class Solution {
     public long sumAndMultiply(int n) {
-
-        if (n == 0) return 0;
-
-        long newNumber = 0;
-        long place = 1;
-        int sum = 0;
-
-        while (n > 0) {
-            int digit = n % 10;
-
-            if (digit != 0) {
-                newNumber += digit * place;
-                place *= 10;
-                sum += digit;
-            }
-
-            n /= 10;
+        int x=0;
+        int sum=0;
+        int i=1;
+        while(n>0){
+            int m=n % 10;
+            n /=10;
+            if(m == 0) continue;
+            sum += m;
+            x += (m * i);
+            i *=10;
         }
-
-        return newNumber * sum;
+        return (long) x * sum;
     }
 }
