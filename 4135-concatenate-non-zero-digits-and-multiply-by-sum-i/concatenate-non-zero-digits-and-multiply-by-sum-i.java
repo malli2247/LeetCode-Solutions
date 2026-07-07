@@ -1,21 +1,12 @@
 class Solution {
     public long sumAndMultiply(int n) {
-        long x = 0;
-        long sum = 0;
-        long place = 1;
-
-        while (n > 0) {
-            int d = n % 10;
-
-            if (d != 0) {
-                x = d * place + x;
-                place *= 10;
-                sum += d;
-            }
-
-            n /= 10;
+        long x = 0,sum = 0,len = 1;
+        while(n != 0){
+            x = (n % 10) * len + x;
+            if(n % 10 != 0) len = len * 10;
+            sum += n % 10;
+            n = n / 10;
         }
-
-        return x * sum;
+        return sum * x;
     }
 }
