@@ -1,17 +1,31 @@
 class Solution {
-    public boolean[] pathExistenceQueries(int n, int[] nums, int maxDiff, int[][] q) {
-        // root - based on diff of nums[i] & nums[i - 1] 
-        // diff > maxDiff 
-        boolean ans[] = new boolean[q.length]; 
-        int root[] = new int[nums.length]; 
-        root[0] = 0; 
-        for(int i = 1; i < nums.length; i++) {
-            root[i] = ((nums[i] - nums[i - 1]) <= maxDiff) ? root[i - 1] : i; 
+    public boolean[] pathExistenceQueries(int n, int[] nums, int maxDiff, int[][] queries) {
+
+        boolean[] res = new boolean[queries.length];
+
+        int[] comp = new int[n];
+
+        int com = 0;
+        comp[0] = com;
+
+        for (int i = 1; i < n; i++) {
+
+            if (nums[i] - nums[i - 1] > maxDiff) {
+                com++;
+            }
+
+            comp[i] = com;
         }
 
-        for(int i = 0; i < q.length; i++) {
-            ans[i] = root[q[i][0]] == root[q[i][1]]; 
+        for (int i = 0; i < queries.length; i++) {
+            int source = queries[i][0];
+            int dest = queries[i][1];
+
+            if (source == dest || comp[source] == comp[dest]) {
+                res[i] = true;
+            }
         }
-        return ans; 
+
+        return res;
     }
 }
