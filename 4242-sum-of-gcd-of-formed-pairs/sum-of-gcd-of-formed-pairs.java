@@ -1,19 +1,33 @@
 class Solution {
-    private int gcd(int a, int b) { return b == 0 ? a : gcd(b, a % b); }
+    public long gcdSum(int[] nums) {
+        int n = nums.length;
+        int mx = 0;
 
-    public long gcdSum(int[] A) {
-        int max = 0;
-        for (int i = 0; i < A.length; i++) {
-            max = Math.max(max, A[i]);
-            A[i] = gcd(A[i], max);
+        for (int i = 0; i < n; i++) {
+            mx = Math.max(mx, nums[i]);
+            nums[i] = gcd(mx, nums[i]);
         }
 
-        Arrays.sort(A);
+        Arrays.sort(nums);
 
-        long res = 0;        
-        for (int i = 0, j = A.length - 1; i < j; i++, j--)
-            res += gcd(A[i], A[j]);
+        int left = 0, right = n - 1;
+        long ans = 0;
 
-        return res;
+        while (left < right) {
+            ans += gcd(nums[left], nums[right]);
+            left++;
+            right--;
+        }
+
+        return ans;
+    }
+
+    private int gcd(int a, int b) {
+        while (b != 0) {
+            int t = a % b;
+            a = b;
+            b = t;
+        }
+        return a;
     }
 }
