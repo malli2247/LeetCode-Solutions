@@ -1,29 +1,15 @@
 class Solution {
     public int maxIceCream(int[] costs, int coins) {
-
-        final int MAX_COST = 100000;
-
-        int[] freq = new int[MAX_COST + 1];
-
-        for (int cost : costs) {
-            freq[cost]++;
-        }
-
+        // Store ice cream costs in increasing order.
+        Arrays.sort(costs);
+        int n = costs.length;
         int answer = 0;
-
-        for (int cost = 1; cost <= MAX_COST; cost++) {
-
-            if (freq[cost] == 0) {
-                continue;
-            }
-
-            int canBuy = Math.min(freq[cost], coins / cost);
-
-            answer += canBuy;
-
-            coins -= canBuy * cost;
+        // Pick ice creams till we can.
+        while (answer < n && costs[answer] <= coins) {
+            // We can buy this icecream, reduce the cost from the coins. 
+            coins -= costs[answer];
+            answer += 1;
         }
-
         return answer;
     }
 }
