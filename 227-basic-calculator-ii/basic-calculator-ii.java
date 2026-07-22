@@ -1,8 +1,9 @@
 class Solution {
     public int calculate(String s) {
+        Stack<Integer> st = new Stack<>();
+
         int num = 0;
         char operator = '+';
-        int last = 0, sum = 0;
 
         for (int i = 0; i < s.length(); i++) {
             char c = s.charAt(i);
@@ -12,23 +13,23 @@ class Solution {
             }
 
             if (isOperator(c) || i == s.length() - 1) {
-                if (operator == '+') {
-                    sum += last;
-                    last = num;
-                }
-                else if (operator == '-') {
-                    sum += last;
-                    last = -num;
-                }
-                else if (operator == '*') last *= num;
-                else if (operator == '/') last /= num;
+                if (operator == '+') st.push(num);
+                else if (operator == '-') st.push(-num);
+                else if (operator == '*') st.push(st.pop() * num);
+                else if (operator == '/') st.push(st.pop() / num);
 
                 num = 0;
                 operator = c;
             }
         }
 
-        return sum += last;
+        int ans = 0;
+
+        while (!st.isEmpty()) {
+            ans += st.pop();
+        }
+
+        return ans;
     }
 
     private boolean isOperator(char c) {
@@ -36,4 +37,4 @@ class Solution {
     }
 }
 
-// TC: O(n), SC: O(1)
+// TC: O(n), SC: O(n)
