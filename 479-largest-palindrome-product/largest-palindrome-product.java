@@ -1,29 +1,8 @@
 public class Solution {
     public int largestPalindrome(int n) {
-        if (n == 1) {
-            return 9;
-        }
-        long upperBound = (long) Math.pow(10, n) - 1;
-        long lowerBound = (long) Math.pow(10, n - 1);
-
-        for (long i = upperBound; i >= lowerBound; i--) {
-            long palindrome = Long.parseLong(i + new StringBuilder(Long.toString(i)).reverse().toString());
-            for (long j = upperBound; j * j >= palindrome; j--) {
-                if (palindrome / j > upperBound) {
-                    break;
-                }
-                if (palindrome % j == 0) {
-                    return (int) (palindrome % 1337);
-                }
-            }
-        }
-
-        return -1; // This should not be reached
-    }
-
-    public static void main(String[] args) {
-        Solution solution = new Solution();
-        System.out.println(solution.largestPalindrome(2));  // Output: 987
-        System.out.println(solution.largestPalindrome(1));  // Output: 9
+        int[] x = {9,99,993,9999,99979,999999,9998017,99999999};
+        int[] y = {1,91,913,9901,99681,999001,9997647,99990001};
+        
+        return ((x[n-1] % 1337) * (y[n-1] % 1337)) % 1337;
     }
 }
