@@ -1,120 +1,139 @@
-import java.util.*;
-
 class Solution {
+    int n;
+    String s;
+    char[] arr;
+    int[] braces;
+    HashMap<String, Integer> variables = new HashMap<>();
+    
     public List<String> basicCalculatorIV(String expression, String[] evalvars, int[] evalints) {
-        Map<String, Integer> evalmap = new HashMap<>();
-        for (int i = 0; i < evalvars.length; i++) evalmap.put(evalvars[i], evalints[i]);
-
-        List<String> tokens = tokenize(expression);
-        Map<List<String>, Integer> poly = parseExpression(tokens, evalmap);
-
-        List<Map.Entry<List<String>, Integer>> list = new ArrayList<>(poly.entrySet());
-        list.sort((a, b) -> {
-            if (b.getKey().size() != a.getKey().size()) return b.getKey().size() - a.getKey().size();
-            // lexicographic compare by joining with '*'
-            return String.join("*", a.getKey()).compareTo(String.join("*", b.getKey()));
+        // Initialize stuff
+        s = expression;
+        arr = s.toCharArray();
+        n = arr.length;
+        braces = new int[n];
+        Arrays.fill(braces, -1);
+        int[] stack = new int[n/2];
+        int index = -1;
+        for(int i=0; i<n; ++i) {
+            if(arr[i] == '(') stack[++index] = i;
+            else if(arr[i] == ')') {
+                int last = stack[index--];
+                braces[last] = i;
+                braces[i] = last;
+            }
+        }
+        for(int i=0; i<evalvars.length; ++i) variables.put(evalvars[i], evalints[i]);
+        
+        // Call the main parser which opens all brackets to the deepest levels and creates Terms
+        List<Term> terms = dewIt(0, n-1);
+        
+        // Create map to collapse and sort Terms
+        TreeMap<String, Integer> map = new TreeMap<>(new Comparator<>() {
+            public int compare(String a, String b) {
+                int ca = countStars(a), cb = countStars(b);
+                if(ca != cb) return cb - ca;
+                else return a.compareTo(b);
+            }
+            
+            private int countStars(String s) {
+                int ans = 0;
+                for(char c: s.toCharArray()) if(c == '*') ++ans;
+                return ans;
+            }
         });
-
-        List<String> ans = new ArrayList<>();
-        for (var e : list) {
-            int coeff = e.getValue();
-            if (coeff == 0) continue;
-            StringBuilder sb = new StringBuilder();
-            sb.append(coeff);
-            for (String v : e.getKey()) sb.append("*").append(v);
-            ans.add(sb.toString());
+        for(Term term: terms) {
+            if(term.coeff != 0) {
+                String key = term.getKey();
+                if(map.containsKey(key)) {
+                    int oldCoeff = map.get(key);
+                    if(oldCoeff == -term.coeff) map.remove(key);
+                    else map.put(key, oldCoeff + term.coeff);
+                } else map.put(key, term.coeff);
+            }
+        }
+        
+        // Convert map to list
+        List<String> ans = new LinkedList<>();
+        for(String k: map.keySet()) ans.add(map.get(k) + "" + k);
+        return ans;
+    }
+    
+    private List<Term> dewIt(int a, int b) {
+        if(braces[a] == b) return dewIt(a+1, b-1);
+        List<Term> ans = new LinkedList<>(), buffer = new LinkedList<>();
+        buffer.add(new Term(1, new LinkedList<>()));
+        for(int i=a; i<=b; ) {
+            int j = i;
+            List<Term> curr = null;
+            if(arr[i] == '(') {
+                j = braces[i] + 1;
+                curr = dewIt(i+1, j-2);
+            }
+            else {
+                while(j <= b && arr[j] != ' ') ++j;
+                String exp = s.substring(i, j);
+                int val = 1;
+                List<String> vars = new LinkedList<>();
+                if(variables.containsKey(exp)) val = variables.get(exp);
+                else if (exp.charAt(0) <= '9') val = Integer.valueOf(exp);
+                else vars.add(exp);
+                curr = new LinkedList<>();
+                curr.add(new Term(val, vars));
+            }
+            buffer = multiply(buffer, curr);
+            if(j > b || arr[j+1] == '+' || arr[j+1] == '-') {
+                ans.addAll(buffer);
+                buffer = new LinkedList<>();
+            }
+            if(j < b) {
+                ++j;
+                if(arr[j] == '+') buffer.add(new Term(1, new LinkedList<>()));
+                else if(arr[j] == '-') buffer.add(new Term(-1, new LinkedList<>()));
+                j += 2;
+            }
+            i = j;
         }
         return ans;
     }
-
-    private List<String> tokenize(String expr) {
-        List<String> tokens = new ArrayList<>();
-        StringBuilder sb = new StringBuilder();
-        for (char c : expr.toCharArray()) {
-            if (Character.isLetterOrDigit(c)) sb.append(c);
-            else {
-                if (sb.length() > 0) { tokens.add(sb.toString()); sb.setLength(0); }
-                if (c == '+' || c == '-' || c == '*' || c == '(' || c == ')') tokens.add(String.valueOf(c));
-            }
+    
+    private List<Term> multiply(List<Term> a, List<Term> b) {
+        List<Term> ans = new LinkedList<>();
+        for(Term x: a) for(Term y: b) {
+            Term prod = x.clone();
+            prod.multiply(y);
+            ans.add(prod);
         }
-        if (sb.length() > 0) tokens.add(sb.toString());
-        return tokens;
+        return ans;
+    }
+}
+
+class Term {
+    int coeff;
+    List<String> vars;
+
+    public Term(int a, List<String> c) {
+        this.coeff = a;
+        vars = new LinkedList<>();
+        vars.addAll(c);
     }
 
-    private Map<List<String>, Integer> parseExpression(List<String> tokens, Map<String, Integer> evalmap) {
-        Deque<Map<List<String>, Integer>> vals = new ArrayDeque<>();
-        Deque<String> ops = new ArrayDeque<>();
-        Map<String, Integer> prec = Map.of("+",1, "-",1, "*",2);
-
-        for (String tok : tokens) {
-            if (tok.equals("(")) ops.push(tok);
-            else if (tok.equals(")")) {
-                while (!ops.peek().equals("(")) applyOp(vals, ops.pop());
-                ops.pop();
-            } else if (prec.containsKey(tok)) {
-                while (!ops.isEmpty() && prec.containsKey(ops.peek()) && prec.get(ops.peek()) >= prec.get(tok)) {
-                    applyOp(vals, ops.pop());
-                }
-                ops.push(tok);
-            } else {
-                vals.push(parseToken(tok, evalmap));
-            }
+    public String getKey() {
+        StringBuilder b = new StringBuilder();
+        Collections.sort(vars);
+        for(String x: vars) {
+            b.append('*');
+            b.append(x);
         }
-        while (!ops.isEmpty()) applyOp(vals, ops.pop());
-        return vals.isEmpty() ? new HashMap<>() : vals.pop();
+        return b.toString();
     }
 
-    private void applyOp(Deque<Map<List<String>, Integer>> vals, String op) {
-        Map<List<String>, Integer> b = vals.pop();
-        Map<List<String>, Integer> a = vals.pop();
-        if (op.equals("+")) vals.push(add(a, b));
-        else if (op.equals("-")) vals.push(sub(a, b));
-        else vals.push(mul(a, b));
+    public void multiply(Term that) {
+        this.coeff *= that.coeff;
+        if(this.coeff == 0) vars.clear();
+        else this.vars.addAll(that.vars);
     }
 
-    private Map<List<String>, Integer> parseToken(String tok, Map<String, Integer> evalmap) {
-        Map<List<String>, Integer> res = new HashMap<>();
-        if (tok.matches("-?\\d+")) {
-            res.put(Collections.emptyList(), Integer.parseInt(tok));
-        } else if (evalmap.containsKey(tok)) {
-            res.put(Collections.emptyList(), evalmap.get(tok));
-        } else {
-            res.put(Arrays.asList(tok), 1);
-        }
-        return res;
-    }
-
-    private Map<List<String>, Integer> combine(Map<List<String>, Integer> m) {
-        Map<List<String>, Integer> res = new HashMap<>();
-        for (var e : m.entrySet()) {
-            if (e.getValue() != 0) res.put(e.getKey(), res.getOrDefault(e.getKey(), 0) + e.getValue());
-        }
-        res.entrySet().removeIf(kv -> kv.getValue() == 0);
-        return res;
-    }
-
-    private Map<List<String>, Integer> add(Map<List<String>, Integer> a, Map<List<String>, Integer> b) {
-        Map<List<String>, Integer> res = new HashMap<>(a);
-        for (var e : b.entrySet()) res.put(e.getKey(), res.getOrDefault(e.getKey(), 0) + e.getValue());
-        return combine(res);
-    }
-
-    private Map<List<String>, Integer> sub(Map<List<String>, Integer> a, Map<List<String>, Integer> b) {
-        Map<List<String>, Integer> res = new HashMap<>(a);
-        for (var e : b.entrySet()) res.put(e.getKey(), res.getOrDefault(e.getKey(), 0) - e.getValue());
-        return combine(res);
-    }
-
-    private Map<List<String>, Integer> mul(Map<List<String>, Integer> a, Map<List<String>, Integer> b) {
-        Map<List<String>, Integer> res = new HashMap<>();
-        for (var ea : a.entrySet()) {
-            for (var eb : b.entrySet()) {
-                List<String> merged = new ArrayList<>(ea.getKey());
-                merged.addAll(eb.getKey());
-                Collections.sort(merged);
-                res.put(merged, res.getOrDefault(merged, 0) + ea.getValue() * eb.getValue());
-            }
-        }
-        return combine(res);
+    public Term clone() {
+        return new Term(coeff, vars);
     }
 }
