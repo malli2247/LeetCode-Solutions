@@ -7,7 +7,7 @@ This repository contains my solutions to LeetCode problems solved consistently f
 
 ## 👨‍💻 About
 
-- 💻 Language(s): Java, Python
+- 💻 Language(s): Java, Python ,PHP
 - 📈 Solving LeetCode Daily
 - 🎯 Focus:
   - Arrays
