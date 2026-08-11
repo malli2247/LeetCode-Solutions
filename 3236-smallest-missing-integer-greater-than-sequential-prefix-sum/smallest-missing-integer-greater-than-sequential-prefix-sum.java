@@ -1,20 +1,24 @@
-class Solution{
-    public int missingInteger(int[] nums){
-        int prefix=nums[0];
-        int n=nums.length;
-        if(n==1){
-            return prefix+1;
+class Solution {
+    public int missingInteger(int[] nums) {
+        int n = nums.length;
+        int sequentialSum = nums[0];
+        for(int i = 1; i < n; i++){
+            if(nums[i] == nums[i - 1] + 1)
+                sequentialSum += nums[i];
+            else
+                break;
         }
-        int i=1;
-    while(i<n&&nums[i]==nums[i-1]+1){
-            prefix+=nums[i];
-            i++;
+        while(true){
+            boolean found = false;
+            for(int num : nums){
+                if(num == sequentialSum){
+                    found = true;
+                    break;
+                }
+            }
+            if(!found)
+                return sequentialSum;
+            sequentialSum++;
         }
-        Set<Integer> present=new HashSet<>();
-        for(int num:nums)present.add(num);
-        while(present.contains(prefix)){
-            prefix++;
-        }
-        return prefix;
     }
 }
