@@ -1,34 +1,12 @@
 class Solution {
     public int hammingDistance(int x, int y) {
-        int count = 0;
-        
-        
-        if (x == y)
-            return count;
-        
-        
-        while (x > 0 || y > 0) {
-            int xBit = 0;
-            int yBit = 0;
-            
-            
-            if (x > 0) {
-                xBit = x % 2;
-                x = Math.floorDiv(x, 2);
-            }
-            
-            
-            if (y > 0) {
-                yBit = y % 2;
-                y = Math.floorDiv(y, 2);
-            }
-            
-            
-            if (xBit != yBit)
-                count++;
-        }
-        
-        
-        return count;
+    int res = 0;
+    int m = x^y;                  // take the xor of two numbers
+    while(m != 0){                // count the no of "1"s 
+        if((m&1) == 1)
+            res++;
+        m = m>>1;
     }
+    return res;
+}
 }
