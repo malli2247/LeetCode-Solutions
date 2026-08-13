@@ -1,87 +1,53 @@
 class Solution {
-    static class Node {char leftChar; char rightChar; int length; int prefix; int suffix;
-int best;
-        Node(char leftChar, char rightChar, int length, int prefix, int suffix, int best) {
-            this.leftChar = leftChar;
-            this.rightChar = rightChar;
-            this.length = length;
-            this.prefix = prefix;
-            this.suffix = suffix;
-            this.best = best;
+    TreeSet<Integer> starts = new TreeSet<>();  // boundary positions + sentinel n
+    TreeMap<Integer, Integer> lens = new TreeMap<>();  // multiset of gap lengths
+    char[] s;
+
+    public int[] longestRepeating(String S, String queryCharacters, int[] queryIndices) {
+        s = S.toCharArray();
+        int n = s.length;
+        for (int i = 0, j = 0; i < n; i = j) {  // groupby(s)
+            while (j < n && s[j] == s[i]) j++;
+            starts.add(i);
+            addLen(j - i);
         }
+        starts.add(n);
+
+        int[] res = new int[queryIndices.length];
+        for (int q = 0; q < res.length; q++) {
+            int i = queryIndices[q];
+            char c = queryCharacters.charAt(q), old = s[i];
+            if (c != old) {
+                for (int[] pn : new int[][]{{i, i - 1}, {i + 1, i + 1}}) {
+                    int p = pn[0], nb = pn[1];
+                    if (0 <= nb && nb < n) {
+                        if (s[nb] == old) addBreak(p);
+                        else if (s[nb] == c) removeBreak(p);
+                    }
+                }
+                s[i] = c;
+            }
+            res[q] = lens.lastKey();
+        }
+        return res;
     }
 
-    private Node[] tree;
-
-    private Node merge(Node left, Node right) {
-        int length = left.length + right.length;
-        int prefix = left.prefix;
-
-        if (left.rightChar == right.leftChar && left.prefix == left.length) {
-            prefix = left.length + right.prefix;
-        }
-
-        int suffix = right.suffix;
-
-        if (left.rightChar == right.leftChar && right.suffix == right.length) {
-            suffix = right.length + left.suffix;
-        }
-
-        int best = Math.max(left.best, right.best);
-
-        if (left.rightChar == right.leftChar) {
-            best = Math.max(best, left.suffix + right.prefix);
-        }
-
-        return new Node(left.leftChar, right.rightChar, length, prefix, suffix, best);
+    void addBreak(int p) {
+        int l = starts.lower(p), r = starts.higher(p);
+        starts.add(p);
+        removeLen(r - l);
+        addLen(p - l);
+        addLen(r - p);
     }
 
-    private void build( int node, int start, int end, String s) {
-        if (start == end) {
-            tree[node] = new Node( s.charAt(start), s.charAt(start), 1, 1, 1, 1);
-            return;
-        }
-
-        int mid = (start + end) / 2;
-
-        build(node * 2, start, mid, s);
-        build(node * 2 + 1, mid + 1, end, s);
-
-        tree[node] = merge(tree[node * 2],tree[node * 2 + 1]
-        );
+    void removeBreak(int p) {
+        int l = starts.lower(p), r = starts.higher(p);
+        starts.remove(p);
+        removeLen(p - l);
+        removeLen(r - p);
+        addLen(r - l);
     }
 
-    private void update( int node, int start, int end, int index, char ch) {
-        if (start == end) {
-            tree[node] = new Node(ch, ch, 1, 1, 1, 1);
-            return;
-        }
-
-        int mid = (start + end) / 2;
-
-        if (index <= mid) {
-            update(node * 2, start, mid, index, ch);
-        } else {
-            update(node * 2 + 1, mid + 1, end, index, ch);
-        }
-
-        tree[node] = merge(
-            tree[node * 2],
-            tree[node * 2 + 1]
-        );
-    }
-
-    public int[] longestRepeating(String s, String queryCharacters, int[] queryIndices) {
-        int n = s.length();
-        tree = new Node[4 * n];
-        build(1, 0, n - 1, s);
-        int[] answer = new int[queryIndices.length];
-
-        for (int i = 0; i < queryIndices.length; i++) {
-            update(1, 0, n - 1, queryIndices[i], queryCharacters.charAt(i));
-            answer[i] = tree[1].best;
-        }
-
-        return answer;
-    }
+    void addLen(int x)    { lens.merge(x, 1, Integer::sum); }
+    void removeLen(int x) { lens.compute(x, (len, cnt) -> cnt == 1 ? null : cnt - 1); }
 }
