@@ -25,6 +25,8 @@ class Solution {
         if ((q1 + q2) % 2 != 0){
             return true;
             }
-        return (2 * s1 + 9 * q1) != (2 * s2 + 9 * q2);
-    }
+        else{
+            return (2 * s1 + 9 * q1) != (2 * s2 + 9 * q2);
+            }
+        }
 }
