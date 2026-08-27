@@ -1,38 +1,34 @@
 class Solution {
     public String lexGreaterPermutation(String s, String target) {
-        int n = s.length();
-        int[] freq = new int[26];
-        for (char ch : s.toCharArray()) {
-            freq[ch - 'a']++;
+        int[] sCount = new int[26];
+        for(int i = 0; i < s.length(); i++) {
+            sCount[s.charAt(i) - 'a']++;
         }
-        int matched = 0;
-        while (matched < n) {
-            int idx = target.charAt(matched) - 'a';
-            if (freq[idx] == 0) {
-                break;
-            }
-            freq[idx]--;
-            matched++;
+        int startIndex = 0;
+        while(startIndex < target.length() && sCount[target.charAt(startIndex) - 'a'] > 0) {
+            sCount[target.charAt(startIndex) - 'a'] -= 1;
+            startIndex++;
         }
-        for (int i = matched; i >= 0; i--) {
-            if (i < matched) {
-                freq[target.charAt(i) - 'a']++;
+        for(int i = startIndex; i >= 0; i--) {
+            if(i < startIndex) {
+                sCount[target.charAt(i) - 'a']++;
             }
-            if (i < n) {
-                int current = target.charAt(i) - 'a';
-                for (int c = current + 1; c < 26; c++) {
-                    if (freq[c] > 0) {
-                        StringBuilder ans = new StringBuilder();
-                        ans.append(target, 0, i);
-                        ans.append((char) ('a' + c));
-                        freq[c]--;
-                        for (int x = 0; x < 26; x++) {
-                            while (freq[x] > 0) {
-                                ans.append((char) ('a' + x));
-                                freq[x]--;
+            if(i < s.length()) {
+                int targetChar = target.charAt(i) - 'a';
+                for(int c = targetChar + 1; c < 26; c++) {
+                    if(sCount[c] > 0) {
+                        StringBuilder result = new StringBuilder();
+                        result.append(target.substring(0, i));
+                        result.append((char)(c + 'a'));
+                        sCount[c]--;
+                        for(int j = 0; j < 26; j++) {
+                            while(sCount[j] > 0) {
+                                result.append((char)(j + 'a'));
+                                sCount[j]--;
                             }
                         }
-                        return ans.toString();
+
+                        return result.toString();
                     }
                 }
             }
