@@ -1,21 +1,28 @@
 class Solution {
     public int totalNumbers(int[] digits) {
-        int[] f = new int[10];
-        int res = 0;
+        int[] freq = new int[10];
+        for (int d : digits) freq[d]++;
 
-        for (int d : digits) f[d]++;
+        int count = 0;
 
-        for (int i = 1; i < 10; i++) 
-            for (int j = 0; j < 10; j++) 
-                for (int k = 0; k < 9; k += 2) {
-                    f[i]--; f[j]--; f[k]--;
+        for (int h = 1; h <= 9; h++) {
+            if (freq[h] == 0) continue;
+            freq[h]--;
 
-                    if (f[i] >= 0 && f[j] >= 0 && f[k] >= 0) res++;
+            for (int t = 0; t <= 9; t++) {
+                if (freq[t] == 0) continue;
+                freq[t]--;
 
-                    f[i]++; f[j]++; f[k]++;
-                }           
-        
+                for (int u = 0; u <= 8; u += 2) {
+                    if (freq[u] > 0) count++;
+                }
 
-        return res;
+                freq[t]++;
+            }
+
+            freq[h]++;
+        }
+
+        return count;
     }
 }
