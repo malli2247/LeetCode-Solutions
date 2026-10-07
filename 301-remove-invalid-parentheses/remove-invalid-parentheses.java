@@ -1,24 +1,46 @@
 class Solution {
     public List<String> removeInvalidParentheses(String s) {
-    List<String> ans = new ArrayList<>();
-    remove(s, ans, 0, 0, new char[]{'(', ')'});
-    return ans;
-}
+        List<String> res = new ArrayList<>();
+        fwd(s, res, 0, 0);
 
-public void remove(String s, List<String> ans, int last_i, int last_j,  char[] par) {
-    for (int stack = 0, i = last_i; i < s.length(); ++i) {
-        if (s.charAt(i) == par[0]) stack++;
-        if (s.charAt(i) == par[1]) stack--;
-        if (stack >= 0) continue;
-        for (int j = last_j; j <= i; ++j)
-            if (s.charAt(j) == par[1] && (j == last_j || s.charAt(j - 1) != par[1]))
-                remove(s.substring(0, j) + s.substring(j + 1, s.length()), ans, i, j, par);
-        return;
+        return res;
     }
-    String reversed = new StringBuilder(s).reverse().toString();
-    if (par[0] == '(') // finished left to right
-        remove(reversed, ans, 0, 0, new char[]{')', '('});
-    else // finished right to left
-        ans.add(reversed);
-}
+
+    private void fwd(String s, List<String> res, int li, int lj) {
+        int bal = 0;
+
+        for (int i = li; i < s.length(); i++) {
+            if (s.charAt(i) == '(') bal++;
+            if (s.charAt(i) == ')') bal--;
+
+            if (bal >= 0) continue;
+
+            for (int j = lj; j <= i; j++)
+                if (s.charAt(j) == ')' && (j == lj || s.charAt(j - 1) != ')'))
+                    fwd(s.substring(0, j) + s.substring(j + 1), res, i, j);
+
+            return;
+        }
+
+        bwd(s, res, s.length() - 1, s.length() - 1);
+    }
+
+    private void bwd(String s, List<String> res, int ri, int rj) {
+        int bal = 0;
+
+        for (int i = ri; i >= 0; i--) {
+            if (s.charAt(i) == ')') bal++;
+            if (s.charAt(i) == '(') bal--;
+
+            if (bal >= 0) continue;
+
+            for (int j = rj; j >= i; j--)
+                if (s.charAt(j) == '(' && (j == rj || s.charAt(j + 1) != '('))
+                    bwd(s.substring(0, j) + s.substring(j + 1), res, i - 1, j - 1);
+
+            return;
+        }
+
+        res.add(s);
+    }
 }
